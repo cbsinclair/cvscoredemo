@@ -81,9 +81,13 @@ const initialTracker = [
     updated: "Yesterday",
   },
 ];
+type SectionTitleProps = {
+  icon: React.ElementType;
+  title: string;
+  subtitle?: string;
+};
 
-function SectionTitle({ icon: Icon, title, subtitle }) {
-  return (
+function SectionTitle({ icon: Icon, title, subtitle }: SectionTitleProps) {
     <div className="flex items-start gap-3">
       <div
         className="h-10 w-10 rounded-xl flex items-center justify-center shadow-sm"
