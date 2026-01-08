@@ -86,6 +86,7 @@ type SectionTitleProps = {
   title: string;
   subtitle?: string;
 };
+
 function SectionTitle({ icon: Icon, title, subtitle }: SectionTitleProps) {
     <div className="flex items-start gap-3">
       <div
