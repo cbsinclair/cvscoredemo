@@ -55,7 +55,7 @@ function scoreColor(score: number): "good" | "warn" | "bad" {
   return "bad";
 }
 
-function formatPct(n) {
+function formatPct(n: number): string {
   return `${Math.round(n)}%`;
 }
 
