@@ -43,11 +43,12 @@ const palette = {
   bg: "#F8FAFC",
 };
 
+
 function clamp(n: number, min: number, max: number): number {
   return Math.max(min, Math.min(max, n));
 }
 
-function scoreColor(score) {
+function scoreColor(score: number): "good" | "warn" | "bad" {
   // Use semantic icons rather than explicit colors; Progress component handles visuals.
   if (score >= 80) return "good";
   if (score >= 60) return "warn";
