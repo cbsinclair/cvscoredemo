@@ -44,7 +44,7 @@ const palette = {
   bg: "#F8FAFC",
 };
 
-function clamp(n, min, max) {
+function clamp(n: number, min: number, max: number): number {
   return Math.max(min, Math.min(max, n));
 }
 
