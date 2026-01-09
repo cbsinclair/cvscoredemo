@@ -122,7 +122,15 @@ function Divider() {
   return <div className="h-px w-full bg-slate-200" />;
 }
 
-function TabButton({ active, onClick, icon: Icon, label }) {
+type TabButtonProps = {
+  active: boolean;
+  onClick: () => void;
+  icon: React.ElementType;
+  label: string;
+};
+
+function TabButton({ active, onClick, icon: Icon, label }: TabButtonProps) {
+
   return (
     <button
       onClick={onClick}
