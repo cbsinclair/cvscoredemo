@@ -148,7 +148,14 @@ function TabButton({ active, onClick, icon: Icon, label }: TabButtonProps) {
   );
 }
 
-function ScoreCard({ label, score, description }) {
+type ScoreCardProps = {
+  label: string;
+  score: number;
+  description: string;
+};
+
+function ScoreCard({ label, score, description }: ScoreCardProps) {
+
   const kind = scoreColor(score);
   const Icon = kind === "good" ? CheckCircle2 : kind === "warn" ? AlertTriangle : XCircle;
   return (
