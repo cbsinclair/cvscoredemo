@@ -43,7 +43,6 @@ const palette = {
   bg: "#F8FAFC",
 };
 
-
 function clamp(n: number, min: number, max: number): number {
   return Math.max(min, Math.min(max, n));
 }
@@ -155,7 +154,6 @@ type ScoreCardProps = {
 };
 
 function ScoreCard({ label, score, description }: ScoreCardProps) {
-
   const kind = scoreColor(score);
   const Icon = kind === "good" ? CheckCircle2 : kind === "warn" ? AlertTriangle : XCircle;
   return (
