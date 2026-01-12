@@ -31,6 +31,26 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+type ScoreBand = "good" | "warn" | "bad";
+
+type WithChildren = { children: React.ReactNode };
+
+type ScoreCardProps = {
+  label: string;
+  score: number;
+  description: string;
+};
+
+type ChecklistItem = {
+  label: string;
+  status?: "pass" | "warn" | "fail";
+  note?: string;
+};
+
+type ChecklistProps = {
+  title: string;
+  items: ChecklistItem[];
+};
 
 // Investor demo prototype for CVScore
 // - No backend
