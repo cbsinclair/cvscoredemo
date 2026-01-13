@@ -1,4 +1,5 @@
 "use client";
+
 import React, { useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -18,6 +19,7 @@ import {
   Lock,
   Zap,
 } from "lucide-react";
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -31,8 +33,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-type ScoreBand = "good" | "warn" | "bad";
 
+/* =========================
+   Types (single source)
+   ========================= */
+
+type ScoreBand = "good" | "warn" | "bad";
 type WithChildren = { children: React.ReactNode };
 
 type ScoreCardProps = {
@@ -52,6 +58,55 @@ type ChecklistProps = {
   items: ChecklistItem[];
 };
 
+type SectionTitleProps = {
+  icon: React.ElementType;
+  title: string;
+  subtitle?: string;
+};
+
+type TabButtonProps = {
+  active: boolean;
+  onClick: () => void;
+  icon: React.ElementType;
+  label: string;
+};
+
+type Step = "landing" | "upload" | "scoring" | "match" | "cover" | "tracker";
+type Tone = "Professional" | "Concise" | "Confident";
+
+type IssueItem = {
+  title: string;
+  detail: string;
+};
+
+type HighlightProps = {
+  title: string;
+  items: IssueItem[];
+};
+
+type ScoreDialProps = {
+  score: number;
+};
+
+type TrackerRow = {
+  id: string;
+  title: string;
+  company: string;
+  status: "Saved" | "Applied" | "Interview" | "Offer" | "Rejected";
+  scoreSnapshot: number;
+  updated: string;
+};
+
+type MatchResult = {
+  pct: number;
+  found: string[];
+  missing: string[];
+};
+
+/* =========================
+   Demo constants / helpers
+   ========================= */
+
 // Investor demo prototype for CVScore
 // - No backend
 // - Mock scoring + matching + improvements
@@ -67,7 +122,7 @@ function clamp(n: number, min: number, max: number): number {
   return Math.max(min, Math.min(max, n));
 }
 
-function scoreColor(score: number): "good" | "warn" | "bad" {
+function scoreColor(score: number): ScoreBand {
   // Use semantic icons rather than explicit colors; Progress component handles visuals.
   if (score >= 80) return "good";
   if (score >= 60) return "warn";
@@ -78,11 +133,41 @@ function formatPct(n: number): string {
   return `${Math.round(n)}%`;
 }
 
-const mockCvText = `CHRIS SINCLAIR\n\nM&E / Data Centre Recruitment | Executive Search\n\nSUMMARY\nRecruitment specialist focused on senior M&E professionals across data centres, construction and energy. Experienced in building new divisions, market mapping and talent intelligence.\n\nEXPERIENCE\nExecutive Search Consultant — Samuel Knight (Data Centres)\n- Built a new sector desk focused on senior M&E and project delivery hires\n- Delivered shortlists across PM, CM, HSE, design engineering\n\nEDUCATION\nBusiness & Management\n\nSKILLS\nStakeholder management, market mapping, talent intelligence, client advisory\n`;
+const mockCvText = `CHRIS SINCLAIR
 
-const mockJobDesc = `Senior Project Manager — Data Centres (UK)\n\nResponsibilities:\n- Lead end-to-end delivery of data centre build projects\n- Manage programme, budget, procurement and contractors\n- Drive H&S compliance and reporting\n- Coordinate MEP design and commissioning activities\n\nRequirements:\n- Strong project management background in mission critical / data centres\n- Familiar with MEP systems, commissioning, change control\n- Excellent stakeholder management\n- NEC / JCT contract experience preferred\n`;
+M&E / Data Centre Recruitment | Executive Search
 
-const initialTracker = [
+SUMMARY
+Recruitment specialist focused on senior M&E professionals across data centres, construction and energy. Experienced in building new divisions, market mapping and talent intelligence.
+
+EXPERIENCE
+Executive Search Consultant — Samuel Knight (Data Centres)
+- Built a new sector desk focused on senior M&E and project delivery hires
+- Delivered shortlists across PM, CM, HSE, design engineering
+
+EDUCATION
+Business & Management
+
+SKILLS
+Stakeholder management, market mapping, talent intelligence, client advisory
+`;
+
+const mockJobDesc = `Senior Project Manager — Data Centres (UK)
+
+Responsibilities:
+- Lead end-to-end delivery of data centre build projects
+- Manage programme, budget, procurement and contractors
+- Drive H&S compliance and reporting
+- Coordinate MEP design and commissioning activities
+
+Requirements:
+- Strong project management background in mission critical / data centres
+- Familiar with MEP systems, commissioning, change control
+- Excellent stakeholder management
+- NEC / JCT contract experience preferred
+`;
+
+const initialTracker: TrackerRow[] = [
   {
     id: "1",
     title: "Senior Project Manager (Data Centres)",
@@ -100,14 +185,12 @@ const initialTracker = [
     updated: "Yesterday",
   },
 ];
-type SectionTitleProps = {
-  icon: React.ElementType;
-  title: string;
-  subtitle?: string;
-};
+
+/* =========================
+   UI atoms
+   ========================= */
 
 function SectionTitle({ icon: Icon, title, subtitle }: SectionTitleProps) {
-
   return (
     <div className="flex items-start gap-3">
       <div
@@ -128,8 +211,7 @@ function SectionTitle({ icon: Icon, title, subtitle }: SectionTitleProps) {
   );
 }
 
-function Pill({ children }: { children: React.ReactNode }) {
-
+function Pill({ children }: WithChildren) {
   return (
     <span className="inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-medium text-slate-700 bg-white">
       {children}
@@ -141,15 +223,7 @@ function Divider() {
   return <div className="h-px w-full bg-slate-200" />;
 }
 
-type TabButtonProps = {
-  active: boolean;
-  onClick: () => void;
-  icon: React.ElementType;
-  label: string;
-};
-
 function TabButton({ active, onClick, icon: Icon, label }: TabButtonProps) {
-
   return (
     <button
       onClick={onClick}
@@ -160,6 +234,7 @@ function TabButton({ active, onClick, icon: Icon, label }: TabButtonProps) {
       }`}
       style={active ? { color: palette.navy } : { color: "#334155" }}
       aria-pressed={active}
+      type="button"
     >
       <Icon className="h-4 w-4" />
       {label}
@@ -169,7 +244,9 @@ function TabButton({ active, onClick, icon: Icon, label }: TabButtonProps) {
 
 function ScoreCard({ label, score, description }: ScoreCardProps) {
   const kind = scoreColor(score);
-  const Icon = kind === "good" ? CheckCircle2 : kind === "warn" ? AlertTriangle : XCircle;
+  const Icon =
+    kind === "good" ? CheckCircle2 : kind === "warn" ? AlertTriangle : XCircle;
+
   return (
     <div className="rounded-2xl border border-slate-200 bg-white p-4">
       <div className="flex items-center justify-between gap-3">
@@ -193,7 +270,7 @@ function ScoreCard({ label, score, description }: ScoreCardProps) {
   );
 }
 
-function ScoreDial({ score }) {
+function ScoreDial({ score }: ScoreDialProps) {
   // Lightweight "dial" without relying on chart libs.
   const pct = clamp(score, 0, 100);
   const angle = (pct / 100) * 270 - 225; // -225..45 degrees
@@ -227,7 +304,7 @@ function ScoreDial({ score }) {
   );
 }
 
-function Highlight({ title, items }) {
+function Highlight({ title, items }: HighlightProps) {
   return (
     <Card className="rounded-2xl">
       <CardHeader>
@@ -237,11 +314,14 @@ function Highlight({ title, items }) {
       </CardHeader>
       <CardContent>
         <div className="space-y-3">
-          {items.map((it, idx) => (
+          {items.map((it: IssueItem, idx: number) => (
             <div key={idx} className="flex items-start gap-3">
               <div
                 className="mt-0.5 h-6 w-6 rounded-xl flex items-center justify-center text-xs font-semibold"
-                style={{ background: "rgba(0,184,169,0.12)", color: palette.navy }}
+                style={{
+                  background: "rgba(0,184,169,0.12)",
+                  color: palette.navy,
+                }}
               >
                 {idx + 1}
               </div>
@@ -278,12 +358,16 @@ function ExportButtons() {
   );
 }
 
+/* =========================
+   App
+   ========================= */
+
 function App() {
-  const [step, setStep] = useState("landing"); // landing | upload | scoring | match | cover | tracker
-  const [cvText, setCvText] = useState("");
-  const [jobText, setJobText] = useState("");
-  const [tone, setTone] = useState("Professional");
-  const [tracker, setTracker] = useState(initialTracker);
+  const [step, setStep] = useState<Step>("landing"); // landing | upload | scoring | match | cover | tracker
+  const [cvText, setCvText] = useState<string>("");
+  const [jobText, setJobText] = useState<string>("");
+  const [tone, setTone] = useState<Tone>("Professional");
+  const [tracker, setTracker] = useState<TrackerRow[]>(initialTracker);
 
   const scoring = useMemo(() => {
     // Mock scoring that reacts to presence of job text and CV length.
@@ -297,7 +381,7 @@ function App() {
     const format = clamp(overall + 10, 35, 98);
     const structure = clamp(overall + 4, 35, 98);
 
-    const issues = [
+    const issues: IssueItem[] = [
       {
         title: "Missing role-specific keywords",
         detail:
@@ -333,14 +417,26 @@ function App() {
     };
   }, [cvText, jobText]);
 
-  const match = useMemo(() => {
+  const match = useMemo<MatchResult | null>(() => {
     if (!jobText) return null;
+
     // Naive keyword simulation for demo.
-    const keywords = ["commissioning", "MEP", "NEC", "JCT", "change control", "budget", "H&S", "procurement"];
+    const keywords = [
+      "commissioning",
+      "MEP",
+      "NEC",
+      "JCT",
+      "change control",
+      "budget",
+      "H&S",
+      "procurement",
+    ];
+
     const cvLower = (cvText || mockCvText).toLowerCase();
     const found = keywords.filter((k) => cvLower.includes(k.toLowerCase()));
     const pct = clamp((found.length / keywords.length) * 100 + 35, 40, 92);
     const missing = keywords.filter((k) => !found.includes(k));
+
     return { pct, found, missing };
   }, [jobText, cvText]);
 
@@ -366,7 +462,7 @@ function App() {
     return `${intro}${body}${close}`;
   }, [jobText, tone]);
 
-  const shell = (content) => (
+  const shell = (content: React.ReactNode) => (
     <div className="min-h-screen" style={{ background: palette.bg }}>
       <header className="sticky top-0 z-20 border-b bg-white/80 backdrop-blur">
         <div className="mx-auto max-w-6xl px-4 py-3 flex items-center justify-between">
@@ -386,9 +482,15 @@ function App() {
           </div>
 
           <div className="hidden md:flex items-center gap-2">
-            <Pill><Shield className="h-3.5 w-3.5 mr-1" /> GDPR-minded</Pill>
-            <Pill><Lock className="h-3.5 w-3.5 mr-1" /> Private by default</Pill>
-            <Pill><Zap className="h-3.5 w-3.5 mr-1" /> AI-assisted</Pill>
+            <Pill>
+              <Shield className="h-3.5 w-3.5 mr-1" /> GDPR-minded
+            </Pill>
+            <Pill>
+              <Lock className="h-3.5 w-3.5 mr-1" /> Private by default
+            </Pill>
+            <Pill>
+              <Zap className="h-3.5 w-3.5 mr-1" /> AI-assisted
+            </Pill>
           </div>
 
           <div className="flex items-center gap-2">
@@ -403,11 +505,7 @@ function App() {
             >
               Load Demo
             </Button>
-            <Button
-              className="rounded-xl"
-              style={{ background: palette.navy }}
-              onClick={() => setStep("upload")}
-            >
+            <Button className="rounded-xl" style={{ background: palette.navy }} onClick={() => setStep("upload")}>
               Try Flow
             </Button>
           </div>
@@ -420,54 +518,31 @@ function App() {
             <div className="rounded-2xl border border-slate-200 bg-white p-3">
               <div className="text-xs font-semibold text-slate-600 px-2 py-1">Demo navigation</div>
               <div className="mt-2 grid gap-1">
-                <TabButton
-                  active={step === "landing"}
-                  onClick={() => setStep("landing")}
-                  icon={Gauge}
-                  label="Landing"
-                />
-                <TabButton
-                  active={step === "upload"}
-                  onClick={() => setStep("upload")}
-                  icon={Upload}
-                  label="Upload CV"
-                />
-                <TabButton
-                  active={step === "scoring"}
-                  onClick={() => setStep("scoring")}
-                  icon={FileText}
-                  label="Score dashboard"
-                />
-                <TabButton
-                  active={step === "match"}
-                  onClick={() => setStep("match")}
-                  icon={Search}
-                  label="Job match"
-                />
-                <TabButton
-                  active={step === "cover"}
-                  onClick={() => setStep("cover")}
-                  icon={Wand2}
-                  label="Cover letter"
-                />
-                <TabButton
-                  active={step === "tracker"}
-                  onClick={() => setStep("tracker")}
-                  icon={ClipboardList}
-                  label="Job tracker"
-                />
+                <TabButton active={step === "landing"} onClick={() => setStep("landing")} icon={Gauge} label="Landing" />
+                <TabButton active={step === "upload"} onClick={() => setStep("upload")} icon={Upload} label="Upload CV" />
+                <TabButton active={step === "scoring"} onClick={() => setStep("scoring")} icon={FileText} label="Score dashboard" />
+                <TabButton active={step === "match"} onClick={() => setStep("match")} icon={Search} label="Job match" />
+                <TabButton active={step === "cover"} onClick={() => setStep("cover")} icon={Wand2} label="Cover letter" />
+                <TabButton active={step === "tracker"} onClick={() => setStep("tracker")} icon={ClipboardList} label="Job tracker" />
               </div>
+
               <div className="mt-3 px-2">
                 <Divider />
                 <div className="mt-3 text-xs text-slate-600 leading-relaxed">
-                  <div className="font-semibold" style={{ color: palette.navy }}>Investor story</div>
-                  <div className="mt-1">Upload → Score → Fix → Match → Apply. A simple loop that drives retention and conversion.</div>
+                  <div className="font-semibold" style={{ color: palette.navy }}>
+                    Investor story
+                  </div>
+                  <div className="mt-1">
+                    Upload → Score → Fix → Match → Apply. A simple loop that drives retention and conversion.
+                  </div>
                 </div>
               </div>
             </div>
 
             <div className="mt-4 rounded-2xl border border-slate-200 bg-white p-4">
-              <div className="text-sm font-semibold" style={{ color: palette.navy }}>MVP KPIs (demo)</div>
+              <div className="text-sm font-semibold" style={{ color: palette.navy }}>
+                MVP KPIs (demo)
+              </div>
               <div className="mt-3 grid gap-3">
                 <div className="flex items-center justify-between">
                   <div className="text-xs text-slate-600">Time to first score</div>
@@ -493,12 +568,20 @@ function App() {
         <div className="rounded-2xl border border-slate-200 bg-white p-4">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
             <div>
-              <div className="text-sm font-semibold" style={{ color: palette.navy }}>Demo disclaimer</div>
-              <div className="text-xs text-slate-600">This prototype uses mock logic and sample data. Production build will use real parsing, scoring and secure storage.</div>
+              <div className="text-sm font-semibold" style={{ color: palette.navy }}>
+                Demo disclaimer
+              </div>
+              <div className="text-xs text-slate-600">
+                This prototype uses mock logic and sample data. Production build will use real parsing, scoring and secure storage.
+              </div>
             </div>
             <div className="flex gap-2">
-              <Button variant="secondary" className="rounded-xl" onClick={() => setStep("landing")}>Restart</Button>
-              <Button className="rounded-xl" style={{ background: palette.navy }} onClick={() => setStep("upload")}>Run the flow</Button>
+              <Button variant="secondary" className="rounded-xl" onClick={() => setStep("landing")}>
+                Restart
+              </Button>
+              <Button className="rounded-xl" style={{ background: palette.navy }} onClick={() => setStep("upload")}>
+                Run the flow
+              </Button>
             </div>
           </div>
         </div>
@@ -509,14 +592,8 @@ function App() {
   const Landing = (
     <div className="space-y-6">
       <div className="rounded-3xl border border-slate-200 bg-white p-6 md:p-8 overflow-hidden relative">
-        <div
-          className="absolute -right-24 -top-24 h-64 w-64 rounded-full"
-          style={{ background: "rgba(0,184,169,0.12)" }}
-        />
-        <div
-          className="absolute -right-10 top-24 h-48 w-48 rounded-full"
-          style={{ background: "rgba(15,26,42,0.06)" }}
-        />
+        <div className="absolute -right-24 -top-24 h-64 w-64 rounded-full" style={{ background: "rgba(0,184,169,0.12)" }} />
+        <div className="absolute -right-10 top-24 h-48 w-48 rounded-full" style={{ background: "rgba(15,26,42,0.06)" }} />
 
         <div className="relative">
           <div className="flex flex-wrap gap-2 mb-4">
@@ -535,11 +612,7 @@ function App() {
           </p>
 
           <div className="mt-6 flex flex-wrap gap-2">
-            <Button
-              className="rounded-xl gap-2"
-              style={{ background: palette.navy }}
-              onClick={() => setStep("upload")}
-            >
+            <Button className="rounded-xl gap-2" style={{ background: palette.navy }} onClick={() => setStep("upload")}>
               Start demo <ArrowRight className="h-4 w-4" />
             </Button>
             <Button
@@ -558,7 +631,9 @@ function App() {
           <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
             <Card className="rounded-2xl">
               <CardHeader>
-                <CardTitle className="text-sm" style={{ color: palette.navy }}>Explainable scoring</CardTitle>
+                <CardTitle className="text-sm" style={{ color: palette.navy }}>
+                  Explainable scoring
+                </CardTitle>
               </CardHeader>
               <CardContent className="text-sm text-slate-600">
                 Clear breakdown across keywords, skills, relevance, structure and ATS readability.
@@ -566,7 +641,9 @@ function App() {
             </Card>
             <Card className="rounded-2xl">
               <CardHeader>
-                <CardTitle className="text-sm" style={{ color: palette.navy }}>Controlled AI improvements</CardTitle>
+                <CardTitle className="text-sm" style={{ color: palette.navy }}>
+                  Controlled AI improvements
+                </CardTitle>
               </CardHeader>
               <CardContent className="text-sm text-slate-600">
                 Before/after rewrites and reasons. The user stays in control.
@@ -574,7 +651,9 @@ function App() {
             </Card>
             <Card className="rounded-2xl">
               <CardHeader>
-                <CardTitle className="text-sm" style={{ color: palette.navy }}>Retention loop</CardTitle>
+                <CardTitle className="text-sm" style={{ color: palette.navy }}>
+                  Retention loop
+                </CardTitle>
               </CardHeader>
               <CardContent className="text-sm text-slate-600">
                 Save jobs, match descriptions, generate cover letters, track outcomes.
@@ -587,7 +666,11 @@ function App() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <Card className="rounded-2xl">
           <CardHeader>
-            <SectionTitle icon={Gauge} title="Investor demo narrative" subtitle="Show the loop: score → fix → match → apply → track." />
+            <SectionTitle
+              icon={Gauge}
+              title="Investor demo narrative"
+              subtitle="Show the loop: score → fix → match → apply → track."
+            />
           </CardHeader>
           <CardContent className="text-sm text-slate-600 leading-relaxed">
             This prototype is designed for pitching: it demonstrates the end-to-end journey and the UI surfaces where monetisation and retention naturally occur.
@@ -612,13 +695,15 @@ function App() {
           <SectionTitle
             icon={Upload}
             title="Upload your CV"
-            subtitle="For the demo, upload is simulated. Paste text or load sample CV." 
+            subtitle="For the demo, upload is simulated. Paste text or load sample CV."
           />
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-              <div className="text-sm font-semibold" style={{ color: palette.navy }}>Option A: Paste CV text</div>
+              <div className="text-sm font-semibold" style={{ color: palette.navy }}>
+                Option A: Paste CV text
+              </div>
               <div className="text-xs text-slate-600 mt-1">(In production, this is PDF/DOCX upload and parsing.)</div>
               <Textarea
                 className="mt-3 min-h-[180px] rounded-xl"
@@ -627,15 +712,14 @@ function App() {
                 onChange={(e) => setCvText(e.target.value)}
               />
             </div>
+
             <div className="rounded-2xl border border-slate-200 bg-white p-4">
-              <div className="text-sm font-semibold" style={{ color: palette.navy }}>Option B: Load sample</div>
+              <div className="text-sm font-semibold" style={{ color: palette.navy }}>
+                Option B: Load sample
+              </div>
               <div className="text-xs text-slate-600 mt-1">Use a sample CV to move quickly through the demo.</div>
               <div className="mt-4 flex flex-wrap gap-2">
-                <Button
-                  className="rounded-xl gap-2"
-                  style={{ background: palette.navy }}
-                  onClick={() => setCvText(mockCvText)}
-                >
+                <Button className="rounded-xl gap-2" style={{ background: palette.navy }} onClick={() => setCvText(mockCvText)}>
                   <FileText className="h-4 w-4" /> Load sample CV
                 </Button>
                 <Button
@@ -659,7 +743,9 @@ function App() {
 
           <div className="flex flex-wrap items-center justify-between gap-2">
             <div className="flex items-center gap-2 text-sm text-slate-700">
-              <Badge variant="secondary" className="rounded-full">Free</Badge>
+              <Badge variant="secondary" className="rounded-full">
+                Free
+              </Badge>
               <span>1 CV score included</span>
             </div>
             <div className="flex gap-2">
@@ -713,7 +799,7 @@ function App() {
             </div>
 
             <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-3">
-              {Object.entries(scoring.subs).map(([k, v]) => (
+              {Object.entries(scoring.subs as Record<string, number>).map(([k, v]) => (
                 <ScoreCard
                   key={k}
                   label={k}
@@ -745,11 +831,7 @@ function App() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
-                <Button
-                  className="w-full rounded-xl gap-2"
-                  style={{ background: palette.navy }}
-                  onClick={() => setStep("match")}
-                >
+                <Button className="w-full rounded-xl gap-2" style={{ background: palette.navy }} onClick={() => setStep("match")}>
                   <Search className="h-4 w-4" /> Match a job description
                 </Button>
                 <Button
@@ -787,10 +869,18 @@ function App() {
 
       <Card className="rounded-3xl">
         <CardHeader>
-          <SectionTitle icon={FileText} title="CV preview (demo)" subtitle="This is text-only for the prototype. Export and template selection are Phase 2." />
+          <SectionTitle
+            icon={FileText}
+            title="CV preview (demo)"
+            subtitle="This is text-only for the prototype. Export and template selection are Phase 2."
+          />
         </CardHeader>
         <CardContent>
-          <Textarea className="min-h-[220px] rounded-2xl" value={cvText || mockCvText} onChange={(e) => setCvText(e.target.value)} />
+          <Textarea
+            className="min-h-[220px] rounded-2xl"
+            value={cvText || mockCvText}
+            onChange={(e) => setCvText(e.target.value)}
+          />
         </CardContent>
       </Card>
     </div>
@@ -809,7 +899,9 @@ function App() {
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="rounded-2xl border border-slate-200 bg-white p-4">
-              <div className="text-sm font-semibold" style={{ color: palette.navy }}>Job description</div>
+              <div className="text-sm font-semibold" style={{ color: palette.navy }}>
+                Job description
+              </div>
               <Textarea
                 className="mt-3 min-h-[220px] rounded-2xl"
                 placeholder="Paste job description here..."
@@ -817,34 +909,40 @@ function App() {
                 onChange={(e) => setJobText(e.target.value)}
               />
               <div className="mt-3 flex flex-wrap gap-2">
-                <Button
-                  variant="secondary"
-                  className="rounded-xl"
-                  onClick={() => setJobText(mockJobDesc)}
-                >
+                <Button variant="secondary" className="rounded-xl" onClick={() => setJobText(mockJobDesc)}>
                   Load sample job
                 </Button>
-                <Button variant="secondary" className="rounded-xl" onClick={() => setJobText("")}>Clear</Button>
+                <Button variant="secondary" className="rounded-xl" onClick={() => setJobText("")}>
+                  Clear
+                </Button>
               </div>
             </div>
 
             <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <div className="text-sm font-semibold" style={{ color: palette.navy }}>Match score</div>
+                  <div className="text-sm font-semibold" style={{ color: palette.navy }}>
+                    Match score
+                  </div>
                   <div className="text-xs text-slate-600">Based on keyword and competency overlap.</div>
                 </div>
-                <Badge variant="secondary" className="rounded-full">Demo</Badge>
+                <Badge variant="secondary" className="rounded-full">
+                  Demo
+                </Badge>
               </div>
 
               {match ? (
                 <div className="mt-4 space-y-4">
                   <div className="rounded-2xl bg-white border border-slate-200 p-4">
                     <div className="flex items-center justify-between">
-                      <div className="text-3xl font-extrabold" style={{ color: palette.navy }}>{formatPct(match.pct)}</div>
+                      <div className="text-3xl font-extrabold" style={{ color: palette.navy }}>
+                        {formatPct(match.pct)}
+                      </div>
                       <div className="text-xs text-slate-600">Overall match</div>
                     </div>
-                    <div className="mt-3"><Progress value={match.pct} /></div>
+                    <div className="mt-3">
+                      <Progress value={match.pct} />
+                    </div>
                     <div className="mt-3 text-xs text-slate-600">
                       {match.pct >= 80
                         ? "Strong match. Tailor the summary and apply."
@@ -856,18 +954,33 @@ function App() {
 
                   <div className="grid grid-cols-1 gap-3">
                     <div className="rounded-2xl bg-white border border-slate-200 p-4">
-                      <div className="text-sm font-semibold" style={{ color: palette.navy }}>Found keywords</div>
+                      <div className="text-sm font-semibold" style={{ color: palette.navy }}>
+                        Found keywords
+                      </div>
                       <div className="mt-2 flex flex-wrap gap-2">
-                        {match.found.length ? match.found.map((k) => (
-                          <Badge key={k} variant="secondary" className="rounded-full">{k}</Badge>
-                        )) : <div className="text-xs text-slate-600">None detected yet.</div>}
+                        {match.found.length ? (
+                          match.found.map((k) => (
+                            <Badge key={k} variant="secondary" className="rounded-full">
+                              {k}
+                            </Badge>
+                          ))
+                        ) : (
+                          <div className="text-xs text-slate-600">None detected yet.</div>
+                        )}
                       </div>
                     </div>
+
                     <div className="rounded-2xl bg-white border border-slate-200 p-4">
-                      <div className="text-sm font-semibold" style={{ color: palette.navy }}>Missing keywords</div>
+                      <div className="text-sm font-semibold" style={{ color: palette.navy }}>
+                        Missing keywords
+                      </div>
                       <div className="mt-2 flex flex-wrap gap-2">
                         {match.missing.map((k) => (
-                          <Badge key={k} className="rounded-full" style={{ background: "rgba(15,26,42,0.06)", color: palette.navy }}>
+                          <Badge
+                            key={k}
+                            className="rounded-full"
+                            style={{ background: "rgba(15,26,42,0.06)", color: palette.navy }}
+                          >
                             {k}
                           </Badge>
                         ))}
@@ -879,11 +992,7 @@ function App() {
                   </div>
 
                   <div className="flex flex-wrap gap-2">
-                    <Button
-                      className="rounded-xl gap-2"
-                      style={{ background: palette.navy }}
-                      onClick={() => setStep("cover")}
-                    >
+                    <Button className="rounded-xl gap-2" style={{ background: palette.navy }} onClick={() => setStep("cover")}>
                       Generate cover letter <ArrowRight className="h-4 w-4" />
                     </Button>
                     <Button
@@ -935,8 +1044,10 @@ function App() {
         <CardContent className="space-y-4">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <div className="flex items-center gap-2">
-              <div className="text-sm font-semibold" style={{ color: palette.navy }}>Tone</div>
-              <Select value={tone} onValueChange={setTone}>
+              <div className="text-sm font-semibold" style={{ color: palette.navy }}>
+                Tone
+              </div>
+              <Select value={tone} onValueChange={(v: Tone) => setTone(v)}>
                 <SelectTrigger className="w-[180px] rounded-xl">
                   <SelectValue placeholder="Select tone" />
                 </SelectTrigger>
@@ -948,27 +1059,44 @@ function App() {
               </Select>
             </div>
             <div className="flex gap-2">
-              <Button variant="secondary" className="rounded-xl" onClick={() => setStep("match")}>Back</Button>
-              <Button className="rounded-xl" style={{ background: palette.navy }} onClick={() => setStep("tracker")}>Add to tracker</Button>
+              <Button variant="secondary" className="rounded-xl" onClick={() => setStep("match")}>
+                Back
+              </Button>
+              <Button className="rounded-xl" style={{ background: palette.navy }} onClick={() => setStep("tracker")}>
+                Add to tracker
+              </Button>
             </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="rounded-2xl border border-slate-200 bg-white p-4">
-              <div className="text-sm font-semibold" style={{ color: palette.navy }}>Job description</div>
+              <div className="text-sm font-semibold" style={{ color: palette.navy }}>
+                Job description
+              </div>
               <div className="mt-2 text-xs text-slate-600">(Used to tailor the letter.)</div>
               <Textarea className="mt-3 min-h-[220px] rounded-2xl" value={jobText} onChange={(e) => setJobText(e.target.value)} />
             </div>
+
             <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
               <div className="flex items-center justify-between">
-                <div className="text-sm font-semibold" style={{ color: palette.navy }}>Generated cover letter</div>
-                <Badge variant="secondary" className="rounded-full">Editable</Badge>
+                <div className="text-sm font-semibold" style={{ color: palette.navy }}>
+                  Generated cover letter
+                </div>
+                <Badge variant="secondary" className="rounded-full">
+                  Editable
+                </Badge>
               </div>
               <Textarea className="mt-3 min-h-[220px] rounded-2xl" value={coverLetter} readOnly={false} />
               <div className="mt-3 flex flex-wrap gap-2">
-                <Button variant="secondary" className="rounded-xl gap-2"><Download className="h-4 w-4" /> Export PDF</Button>
-                <Button variant="secondary" className="rounded-xl gap-2"><Download className="h-4 w-4" /> Export Word</Button>
-                <Button className="rounded-xl gap-2" style={{ background: palette.navy }}><Sparkles className="h-4 w-4" /> Upgrade to Pro</Button>
+                <Button variant="secondary" className="rounded-xl gap-2">
+                  <Download className="h-4 w-4" /> Export PDF
+                </Button>
+                <Button variant="secondary" className="rounded-xl gap-2">
+                  <Download className="h-4 w-4" /> Export Word
+                </Button>
+                <Button className="rounded-xl gap-2" style={{ background: palette.navy }}>
+                  <Sparkles className="h-4 w-4" /> Upgrade to Pro
+                </Button>
               </div>
             </div>
           </div>
@@ -984,7 +1112,7 @@ function App() {
           <SectionTitle
             icon={ClipboardList}
             title="Job tracker"
-            subtitle="A lightweight retention loop: save roles, track status, and keep the CV score snapshot." 
+            subtitle="A lightweight retention loop: save roles, track status, and keep the CV score snapshot."
           />
         </CardHeader>
         <CardContent className="space-y-4">
@@ -1027,15 +1155,19 @@ function App() {
               {tracker.map((row) => (
                 <div key={row.id} className="grid grid-cols-12 px-4 py-3 items-center">
                   <div className="col-span-4">
-                    <div className="text-sm font-medium" style={{ color: palette.navy }}>{row.title}</div>
+                    <div className="text-sm font-medium" style={{ color: palette.navy }}>
+                      {row.title}
+                    </div>
                     <div className="text-xs text-slate-600">Updated: {row.updated}</div>
                   </div>
                   <div className="col-span-3 text-sm text-slate-700">{row.company}</div>
                   <div className="col-span-2">
                     <Select
                       value={row.status}
-                      onValueChange={(v) =>
-                        setTracker((t) => t.map((r) => (r.id === row.id ? { ...r, status: v, updated: "Today" } : r)))
+                      onValueChange={(v: TrackerRow["status"]) =>
+                        setTracker((t) =>
+                          t.map((r) => (r.id === row.id ? { ...r, status: v, updated: "Today" } : r))
+                        )
                       }
                     >
                       <SelectTrigger className="rounded-xl h-9">
@@ -1052,8 +1184,12 @@ function App() {
                   </div>
                   <div className="col-span-2">
                     <div className="flex items-center gap-2">
-                      <div className="text-sm font-semibold" style={{ color: palette.navy }}>{row.scoreSnapshot}</div>
-                      <div className="w-20"><Progress value={row.scoreSnapshot} /></div>
+                      <div className="text-sm font-semibold" style={{ color: palette.navy }}>
+                        {row.scoreSnapshot}
+                      </div>
+                      <div className="w-20">
+                        <Progress value={row.scoreSnapshot} />
+                      </div>
                     </div>
                   </div>
                   <div className="col-span-1 flex justify-end">
@@ -1071,8 +1207,12 @@ function App() {
           </div>
 
           <div className="flex flex-wrap gap-2">
-            <Button variant="secondary" className="rounded-xl" onClick={() => setStep("scoring")}>Back to score</Button>
-            <Button className="rounded-xl" style={{ background: palette.navy }} onClick={() => setStep("upload")}>Score another CV</Button>
+            <Button variant="secondary" className="rounded-xl" onClick={() => setStep("scoring")}>
+              Back to score
+            </Button>
+            <Button className="rounded-xl" style={{ background: palette.navy }} onClick={() => setStep("upload")}>
+              Score another CV
+            </Button>
           </div>
         </CardContent>
       </Card>
@@ -1100,5 +1240,3 @@ function App() {
 }
 
 export default App;
-// redeploy trigger
-// build trigger
